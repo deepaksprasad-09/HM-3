@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Home Credit Auto Entry</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--red:#D0021B;--red-dark:#9B0014;--red-glow:rgba(208,2,27,0.12);--bg:#0D0D0D;--surface:#161616;--surface2:#1F1F1F;--border:#2A2A2A;--text:#F0F0F0;--muted:#666;--green:#00C48C;--amber:#F5A623;--blue:#4A9EFF;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(208,2,27,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(208,2,27,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.container{max-width:960px;margin:0 auto;padding:36px 24px;position:relative;z-index:1;}
+
+/* Header */
+.header{display:flex;align-items:center;gap:16px;margin-bottom:36px;}
+.logo{background:var(--red);color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:2px;padding:8px 14px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));}
+.header h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.header p{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--surface);border:1px solid var(--border);padding:16px;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat.s-total::before{background:var(--blue);}
+.stat.s-done::before{background:var(--green);}
+.stat.s-current::before{background:var(--amber);}
+.stat.s-errors::before{background:var(--red);}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-family:'DM Mono',monospace;}
+.stat-val{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-top:4px;}
+.stat.s-total .stat-val{color:var(--blue);}
+.stat.s-done .stat-val{color:var(--green);}
+.stat.s-current .stat-val{color:var(--amber);}
+.stat.s-errors .stat-val{color:var(--red);}
+
+/* Steps */
+.steps{display:flex;margin-bottom:20px;display:none;}
+.steps.visible{display:flex;}
+.step{flex:1;padding:10px 6px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;border:1px solid var(--border);border-right:none;color:var(--muted);transition:all .3s;}
+.step:last-child{border-right:1px solid var(--border);}
+.step.active{background:var(--red-glow);border-color:var(--red);color:var(--red);}
+.step.done{background:rgba(0,196,140,.08);border-color:rgba(0,196,140,.3);color:var(--green);}
+.step-n{display:block;font-size:16px;font-family:'Syne',sans-serif;font-weight:800;margin-bottom:2px;}
+
+/* Progress */
+.prog-wrap{display:none;margin-bottom:20px;}
+.prog-wrap.visible{display:block;}
+.prog-header{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px;}
+.prog-bar{height:4px;background:var(--surface2);}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--amber));width:0%;transition:width .5s ease;}
+
+/* Current row */
+.cur-row{display:none;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--amber);padding:18px 20px;margin-bottom:20px;}
+.cur-row.visible{display:block;}
+.cur-row-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cur-row-title{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);}
+.row-badge{font-family:'DM Mono',monospace;font-size:12px;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:var(--amber);padding:3px 10px;}
+.row-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.row-field{background:var(--surface2);border:1px solid var(--border);padding:10px 12px;}
+.rf-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.rf-val{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Upload */
+.card{background:var(--surface);border:1px solid var(--border);padding:28px;margin-bottom:20px;}
+.sec-title{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:16px;}
+.upload-zone{border:1.5px dashed var(--border);padding:36px;text-align:center;cursor:pointer;transition:all .3s;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--red);background:var(--red-glow);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:34px;margin-bottom:10px;display:block;}
+.upload-main{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px;}
+.upload-sub{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.file-info{display:none;margin-top:14px;background:var(--surface2);border:1px solid var(--border);padding:12px 16px;align-items:center;gap:12px;}
+.file-info.visible{display:flex;}
+.fi-name{font-family:'DM Mono',monospace;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fi-rows{font-family:'DM Mono',monospace;font-size:11px;color:var(--green);background:rgba(0,196,140,.1);border:1px solid rgba(0,196,140,.2);padding:3px 8px;}
+
+/* Button */
+.btn{width:100%;background:var(--red);color:#fff;border:none;padding:16px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-top:16px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));}
+.btn:hover:not(:disabled){background:var(--red-dark);transform:translateY(-1px);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn.success{background:#00875A;}
+
+/* Log */
+.log-section{background:var(--surface);border:1px solid var(--border);}
+.log-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.log-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+.log-body{height:300px;overflow-y:auto;padding:10px;font-family:'DM Mono',monospace;font-size:12px;}
+.log-body::-webkit-scrollbar{width:4px;}
+.log-body::-webkit-scrollbar-thumb{background:var(--border);}
+.log-entry{display:flex;gap:10px;padding:5px 8px;margin-bottom:2px;border-radius:2px;}
+.log-entry:hover{background:var(--surface2);}
+.log-time{color:var(--muted);flex-shrink:0;}
+.log-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.log-entry.info .log-dot{background:var(--blue);}
+.log-entry.success .log-dot{background:var(--green);}
+.log-entry.warning .log-dot{background:var(--amber);}
+.log-entry.error .log-dot{background:var(--red);}
+.log-entry.step .log-dot{background:var(--muted);}
+.log-entry.info .log-msg{color:var(--blue);}
+.log-entry.success .log-msg{color:var(--green);}
+.log-entry.warning .log-msg{color:var(--amber);}
+.log-entry.error .log-msg{color:#ff6b6b;}
+.log-entry.step .log-msg{color:#999;}
+.log-empty{color:var(--muted);text-align:center;padding:60px;font-size:12px;}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.card,.stats,.log-section{animation:fadeUp .5s ease both;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">HC</div>
+    <div>
+      <h1>Auto Entry Tool</h1>
+      <p>home credit portal automation · excel → browser · live dashboard</p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat s-total"><div class="stat-label">Total Rows</div><div class="stat-val" id="sTotal">0</div></div>
+    <div class="stat s-done"><div class="stat-label">Processed</div><div class="stat-val" id="sDone">0</div></div>
+    <div class="stat s-current"><div class="stat-label">Current Row</div><div class="stat-val" id="sCurrent">—</div></div>
+    <div class="stat s-errors"><div class="stat-label">Errors</div><div class="stat-val" id="sErrors">0</div></div>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps" id="steps">
+    <div class="step" id="st1"><span class="step-n">1</span>Login</div>
+    <div class="step" id="st2"><span class="step-n">2</span>Select</div>
+    <div class="step" id="st3"><span class="step-n">3</span>Search</div>
+    <div class="step" id="st4"><span class="step-n">4</span>Fill</div>
+    <div class="step" id="st5"><span class="step-n">5</span>Submit</div>
+    <div class="step" id="st6"><span class="step-n">6</span>Confirm</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-header"><span id="progLabel">Processing...</span><span id="progPct">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  </div>
+
+  <!-- Current Row -->
+  <div class="cur-row" id="curRow">
+    <div class="cur-row-hdr">
+      <span class="cur-row-title">▶ Currently Processing</span>
+      <span class="row-badge" id="rowBadge">Row — / —</span>
+    </div>
+    <div class="row-grid" id="rowGrid"></div>
+  </div>
+
+  <!-- Upload -->
+  <div class="card">
+    <div class="sec-title">① Upload Excel File</div>
+    <div class="upload-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".xlsx,.xls"/>
+      <span class="upload-icon">📊</span>
+      <div class="upload-main">Drop Excel file here or click to browse</div>
+      <div class="upload-sub">.xlsx / .xls · columns: id, pass, CONTRACT_NO, collected_amount, payer's_name ...</div>
+    </div>
+    <div class="file-info" id="fileInfo">
+      <span style="color:var(--green);font-size:18px">✅</span>
+      <span class="fi-name" id="fiName">—</span>
+      <span class="fi-rows" id="fiRows">0 rows</span>
+    </div>
+    <button class="btn" id="btnStart" disabled>Start Automation</button>
+  </div>
+
+  <!-- Log -->
+  <div class="log-section">
+    <div class="log-hdr">
+      <span class="sec-title" style="margin:0">Activity Log</span>
+      <span class="log-count" id="logCount">0 entries</span>
+    </div>
+    <div class="log-body" id="logBody">
+      <div class="log-empty">Upload an Excel file to get started...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let uploadedPath = '';
+let logEntries = 0;
+let totalRows = 0;
+let statusInterval = null;
+let stepsDone = 0;
+
+const stepMap = {login:1, payment_collection:2, search:3, fill:4, submit:5, confirm:6};
+
+// Elements
+const fileInput = document.getElementById('fileInput');
+const dropZone  = document.getElementById('dropZone');
+const fileInfo  = document.getElementById('fileInfo');
+const fiName    = document.getElementById('fiName');
+const fiRows    = document.getElementById('fiRows');
+const btnStart  = document.getElementById('btnStart');
+const logBody   = document.getElementById('logBody');
+const logCount  = document.getElementById('logCount');
+const steps     = document.getElementById('steps');
+const progWrap  = document.getElementById('progWrap');
+const curRow    = document.getElementById('curRow');
+
+// Drag & drop
+dropZone.addEventListener('dragover', e=>{e.preventDefault();dropZone.classList.add('drag');});
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e=>{e.preventDefault();dropZone.classList.remove('drag');if(e.dataTransfer.files[0])uploadFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change', e=>{if(e.target.files[0])uploadFile(e.target.files[0]);});
+
+function uploadFile(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  addLog('info', 'Uploading ' + file.name + '...');
+  fetch('/upload', {method:'POST', body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.error){addLog('error',d.error);return;}
+      uploadedPath = d.path;
+      totalRows = d.rows;
+      fiName.textContent = d.filename;
+      fiRows.textContent = d.rows + ' rows';
+      fileInfo.classList.add('visible');
+      document.getElementById('sTotal').textContent = d.rows;
+      btnStart.disabled = false;
+      addLog('success', 'Loaded ' + d.rows + ' rows from ' + d.filename);
+    })
+    .catch(e=>addLog('error','Upload failed: '+e));
+}
+
+// Start
+btnStart.addEventListener('click', ()=>{
+  if(!uploadedPath) return;
+  btnStart.disabled = true;
+  btnStart.innerHTML = '<span class="spinner"></span> Running...';
+  steps.classList.add('visible');
+  progWrap.classList.add('visible');
+  logEntries = 0;
+  logBody.innerHTML = '';
+  stepsDone = 0;
+
+  fetch('/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:uploadedPath})})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.error){addLog('error',d.error);btnStart.disabled=false;btnStart.innerHTML='Start Automation';return;}
+      startStream();
+      startStatusPoll();
+    });
+});
+
+// SSE Stream for logs
+function startStream() {
+  const es = new EventSource('/stream');
+  es.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if(d.type === 'ping') return;
+    addLog(d.type, d.msg, d.time);
+  };
+  es.onerror = () => { es.close(); };
+}
+
+// Status polling
+function startStatusPoll() {
+  statusInterval = setInterval(()=>{
+    fetch('/status').then(r=>r.json()).then(d=>{
+      document.getElementById('sDone').textContent    = d.done;
+      document.getElementById('sErrors').textContent  = d.errors;
+      document.getElementById('sCurrent').textContent = d.current_idx || '—';
+
+      // Progress
+      const pct = d.total > 0 ? Math.round((d.done/d.total)*100) : 0;
+      document.getElementById('progFill').style.width = pct+'%';
+      document.getElementById('progPct').textContent  = pct+'%';
+      document.getElementById('progLabel').textContent = d.running
+        ? 'Processing row '+d.current_idx+' of '+d.total
+        : (d.done === d.total && d.total > 0 ? 'All done! ✅' : 'Ready');
+
+      // Step indicator
+      const stepNum = stepMap[d.step] || 0;
+      for(let i=1;i<=6;i++){
+        const el = document.getElementById('st'+i);
+        el.className = 'step' + (i < stepNum ? ' done' : i===stepNum ? ' active' : '');
+      }
+
+      // Current row card
+      if(d.current_idx && d.current_row && Object.keys(d.current_row).length){
+        updateCurRow(d.current_row, d.current_idx, d.total);
+      }
+
+      // Done
+      if(!d.running && d.done > 0){
+        clearInterval(statusInterval);
+        curRow.classList.remove('visible');
+        btnStart.disabled = false;
+        btnStart.innerHTML = '✅ Done! Run Again';
+        btnStart.className = 'btn success';
+        // Reset step indicator
+        for(let i=1;i<=6;i++) document.getElementById('st'+i).className='step done';
+      }
+    });
+  }, 800);
+}
+
+function updateCurRow(row, idx, total) {
+  curRow.classList.add('visible');
+  document.getElementById('rowBadge').textContent = 'Row '+idx+' / '+total;
+  const fields = [
+    {l:'Contract No',  v: row['CONTRACT_NO'] || '—'},
+    {l:"Payer's Name", v: row["payer's_name"] || '—'},
+    {l:'Mobile',       v: row["payer's_mobile_no"] || '—'},
+    {l:'Amount',       v: row['collected_amount'] || '0'},
+    {l:'Address',      v: row['new_address'] || 'NA'},
+    {l:'Comments',     v: (Object.entries(row).find(([k])=>k.includes('CM PTP'))||['',''])[1].slice(0,28) || '—'},
+  ];
+  document.getElementById('rowGrid').innerHTML = fields.map(f=>
+    '<div class="row-field"><div class="rf-label">'+f.l+'</div><div class="rf-val">'+f.v+'</div></div>'
+  ).join('');
+}
+
+function addLog(type, msg, time) {
+  const empty = logBody.querySelector('.log-empty');
+  if(empty) empty.remove();
+  const t = time || new Date().toTimeString().slice(0,8);
+  const el = document.createElement('div');
+  el.className = 'log-entry '+type;
+  el.innerHTML = '<span class="log-time">'+t+'</span><span class="log-dot"></span><span class="log-msg">'+msg+'</span>';
+  logBody.appendChild(el);
+  logBody.scrollTop = logBody.scrollHeight;
+  logEntries++;
+  logCount.textContent = logEntries+' entries';
+}
+</script>
+</body>
+</html>
